@@ -80,13 +80,22 @@ model Zones{
   @@map("zones")
 }
 
+enum OrderStatus {
+  pending
+  processing
+  completed
+  cancelled
+}
+
 model Orders {
   id         Int      @id @default(autoincrement()) @map("id")
+  orderNumber String   @unique @map("order_number")
   totalUnits Int      @map("total_units")
   zoneId     Int      @map("zone_id")
   orderDate  DateTime @default(now()) @map("order_date")
   totalParts Int      @map("total_parts")
   createdBy  Int      @map("created_by")
+  status     OrderStatus   @map("status")
   isActive   Boolean  @default(true) @map("is_active")
   isDeleted  Boolean  @default(false) @map("is_deleted")
   createdAt  DateTime @default(now()) @map("created_at")
