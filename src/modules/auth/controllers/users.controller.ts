@@ -21,7 +21,6 @@ import { UpdateUserDto } from '../dtos';
 
 import { GetUser } from '../decorators';
 import type { ModelUser } from '../interfaces/model-auth.interface';
-import { UpdatePasswordDto } from '../dtos/update-password.dto';
 
 @ApiBearerAuth('JWT')
 @UseGuards(AuthGuard('jwt'), PoliciesGuard)
