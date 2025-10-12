@@ -2,6 +2,7 @@
 /dist
 /node_modules
 /build
+/geminis
 
 # Logs
 logs
@@ -54,3 +55,29 @@ pids
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+# REST API
+rest-api
+
+# DB
+*.db
+*.sqlite
+
+# Public ADS to Visor
+public/images/ads/*
+public/images/logo/*
+public/*
+
+database.sqlite-journal
+pg_db_data
+postgres-data
+
+mariadb-data
+postgres-data
+# Sentry Config File
+.sentryclirc
+
+#storage txt files
+storage/order_txts/*
+
+uploads
+scripts/*.conf

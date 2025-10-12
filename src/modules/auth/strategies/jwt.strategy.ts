@@ -31,6 +31,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
     if (user.isDeleted) throw new UnauthorizedException('User not found');
 
-    return user;
+    // Ensure password is undefined if null to match ModelUser type
+    if (user.password === null) {
+      user.password = null;
+    } else {
+      delete (user as ModelUser)?.password;
+    }
+
+    return user as ModelUser;
   }
 }

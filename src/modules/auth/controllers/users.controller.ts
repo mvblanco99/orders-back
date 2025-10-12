@@ -61,10 +61,4 @@ export class UsersController {
     return this.usersService.remove(id);
   }
 
-  @Patch()
-  @CheckPolicies((ability) => ability.can(Action.Delete, 'User'))
-  updatePassword(@GetUser() user: ModelUser, @Body() updatePassword:UpdatePasswordDto) {
-    return this.usersService.updatePassword(user.id, updatePassword);
-  }
-
 }

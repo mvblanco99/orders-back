@@ -6,7 +6,8 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { Profile } from 'passport-discord'
+import slugify from 'slugify';
+import { randomBytes } from 'crypto';
 
 import { compareData, encryptData } from '../../common/utils/encryptData';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -14,8 +15,6 @@ import { RegisterUserDto } from '../dtos/register-user.dto';
 import { LoginUserDto } from '../dtos/login-user.dto';
 import { JwtPayload } from '../interfaces/jwt-payload.interface';
 import { ModelUser } from '../interfaces/model-auth.interface';
-import slugify from 'slugify';
-import { randomBytes } from 'crypto';
 
 const DEFAULT_USER_PROFILE_ID = 2;
 @Injectable()
@@ -50,7 +49,7 @@ export class AuthService {
     return finalSlug;
   }
 
-  async create(createUserDto: RegisterUserDto) {
+  async create(createUserDto: RegisterUserDto, userId:number) {
     try {
       const { email, password, name } = createUserDto;
 
@@ -66,22 +65,33 @@ export class AuthService {
       
       const uniqueSlug = await this._generateUniqueSlug(name);
 
-      const user = await this.prismaService.user.create({
-        data: {
-          slug: uniqueSlug, 
-          email: createUserDto.email.toLowerCase(),
-          password: await encryptData(password),
-          name,
-          profileId: DEFAULT_USER_PROFILE_ID,
-        },
-        select: {
-          id: true,
-          email: true,
-          isActive: true,
-        },
-      });
+      const user = await this.prismaService.$transaction(async (tx) => {
 
-     
+        const user = await tx.user.create({
+          data: {
+            slug: uniqueSlug, 
+            email: createUserDto.email.toLowerCase(),
+            password: await encryptData(password),
+            name,
+            profileId: DEFAULT_USER_PROFILE_ID,
+          },
+          select: {
+            id: true,
+            email: true,
+            isActive: true,
+          },
+        });
+
+        tx.userLogger.create({
+          data: {
+            userId,
+            action:`Usuario con id: ${userId}, registro un nuevo usuario = ${user.email} - ${user.id}`
+          }
+        })
+
+        return user;
+      })
+
       return { jwt: this.getJsonWebToken({ uid: user.id }) };
     } catch (error) {
       if (

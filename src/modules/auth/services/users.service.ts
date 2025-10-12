@@ -66,39 +66,5 @@ export class UsersService {
   }
 
 
-  async updatePassword(userId:number, updatePasswordDto:UpdatePasswordDto){
-    try {
-      const {password} = updatePasswordDto;
-
-      const user = await this.prismaService.user.findFirst({
-        where:{id: userId}
-      })
-
-      if(!user) throw new BadRequestException('Usuario no esta logueado');
-
-      return await this.prismaService.user.update({
-        where:{
-          id:userId
-        },
-        data:{
-          password:await encryptData(password)
-        }
-      })
-    } catch (error) {
-      this.logger.error(
-        `Error al actualizar contraseña para el usuario Id: ${userId}: ${error.message}`,
-        error.stack,
-      );
-      if (
-        error instanceof BadRequestException ||
-        error instanceof NotFoundException
-      ) {
-        throw error;
-      }
-      // Para cualquier otro error, lanzamos uno genérico y controlado.
-      throw new InternalServerErrorException(
-        'Ocurrió un error inesperado al actualizar contraseña.',
-      );
-    }
-  }
+  
 }
