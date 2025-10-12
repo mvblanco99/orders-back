@@ -1,0 +1,41 @@
+services:
+  orders_back_db:
+    image: postgres:17.4
+    container_name: orders_back_db
+    restart: always
+    environment:
+      POSTGRES_DB: ${DB_PS_DATABASE}
+      POSTGRES_USER: ${DB_PS_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PS_PASSWORD}
+    command: >
+      postgres
+        -c max_connections=${MAX_CONNECTIONS}
+        -c shared_buffers=${SHARED_BUFFERS}
+        -c work_mem=${WORK_MEM}
+        -c maintenance_work_mem=${MAINTENANCE_WORK_MEM}
+        -c wal_buffers=${WAL_BUFFERS}
+        -c checkpoint_timeout=${CHECKPOINT_TIMEOUT}
+        -c effective_cache_size=${EFFECTIVE_CACHE_SIZE}
+        -c random_page_cost=${RANDOM_PAGE_COST}
+        -c logging_collector=${LOGGING_COLLECTOR}
+        -c log_statement=${LOG_STATEMENT}
+        -c log_min_duration_statement=${LOG_MIN_DURATION_STATEMENT}
+    ports:
+      - ${DB_PS_PORT}:${DB_PS_DOCKER_PORT}
+    volumes:
+      - ${DB_PS_DOCKER_VOLUME}:/var/lib/postgresql/data:rw,noatime
+      - /dev/shm:/dev/shm
+    deploy:
+      resources:
+        limits:
+          memory: 6G
+          cpus: '4.0'
+        reservations:
+          memory: 2G
+          cpus: '2.0'
+    healthcheck:
+      test:
+        ['CMD-SHELL', 'pg_isready -U ${DB_PS_USERNAME} -d ${DB_PS_DATABASE}']
+      interval: 1m30s
+      timeout: 10s
+      retries: 1

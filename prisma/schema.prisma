@@ -1,0 +1,184 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum PermissionType {
+  can
+  cannot
+}
+
+enum PermissionAction {
+  create
+  read
+  update
+  delete
+  manage
+}
+
+enum MenuTypes {
+  separator
+  link
+  dropdown
+}
+
+model SettingUser {
+  id              Int               @id @default(autoincrement()) @map("id")
+  timeZone String @map("time_zone")
+  userId Int @map("user_id")
+  user   User @relation(fields: [userId], references: [id])
+  @@map("setting_user")
+}
+
+model User {
+  id              Int               @id @default(autoincrement()) @map("id")
+  email           String            @unique @map("email")
+  password        String?           @map("password")
+  name            String            @map("name")
+  isActive        Boolean           @default(true) @map("is_active")
+  isDeleted       Boolean           @default(false) @map("is_deleted")
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+  profileId       Int               @map("profile_id")
+  slug            String            @unique
+  Profile         Profile           @relation(fields: [profileId], references: [id])
+  SettingUser     SettingUser[]
+  Orders          Orders[]
+  Picker          Parts[]           @relation("PartsPicker")
+  Packer          Parts[]           @relation("PartsPacker")
+  Rechecker       Parts[]           @relation("PartsRechecker")
+
+  @@index([isDeleted])
+  @@map("users")
+}
+
+model Zones{
+  id        Int      @id @default(autoincrement()) @map("id")
+  name      String   @unique @map("name")
+  isActive  Boolean  @default(true) @map("is_active")
+  isDeleted Boolean  @default(false) @map("is_deleted")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  Orders    Orders[]  
+
+  @@index([isActive])
+  @@map("zones")
+}
+
+model Orders {
+  id         Int      @id @default(autoincrement()) @map("id")
+  totalUnits Int      @map("total_units")
+  zoneId     Int      @map("zone_id")
+  orderDate  DateTime @default(now()) @map("order_date")
+  totalParts Int      @map("total_parts")
+  createdBy  Int      @map("created_by")
+  isActive   Boolean  @default(true) @map("is_active")
+  isDeleted  Boolean  @default(false) @map("is_deleted")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+  User       User     @relation(fields: [createdBy], references: [id])
+  Zone       Zones    @relation(fields: [zoneId], references: [id])
+  OrderDetails OrdersDetails[]
+
+  @@map("orders")
+}
+
+model OrdersDetails{
+  id        Int     @id @default(autoincrement()) @map("id")
+  orderId   Int     @map("order_id")
+  partId    Int     @map("part_id")
+  quantity  Int     @map("quantity")
+  isActive  Boolean  @default(true) @map("is_active")
+  isDeleted Boolean  @default(false) @map("is_deleted")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  Order     Orders  @relation(fields: [orderId], references: [id])
+  Parts     Parts  []
+  
+  @@map("orders_details")
+}
+
+model Parts{
+  id        Int      @id @default(autoincrement()) @map("id")
+  orderDetailId Int? @map("order_detail_id")
+  pickerId    Int      @map("picker_id")
+  packerId    Int?     @map("packer_id")
+  recheckerId Int?     @map("rechecker_id")
+  isActive  Boolean  @default(true) @map("is_active")
+  isDeleted Boolean  @default(false) @map("is_deleted")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  OrderDetails OrdersDetails? @relation(fields: [orderDetailId], references: [id])
+  Picker      User?   @relation("PartsPicker", fields: [pickerId], references: [id])
+  Packer      User?   @relation("PartsPacker", fields: [packerId], references: [id])
+  Rechecker   User?   @relation("PartsRechecker", fields: [recheckerId], references: [id])
+  
+  @@index([isActive])
+  @@map("parts")
+}
+
+model Profile {
+  id               Int                @id @default(autoincrement()) @map("id")
+  name             String             @unique @map("name")
+  isActive         Boolean            @default(true) @map("is_active")
+  isDeleted        Boolean            @default(false) @map("is_deleted")
+  createdAt        DateTime           @default(now()) @map("created_at")
+  updatedAt        DateTime           @updatedAt @map("updated_at")
+  ProfileMenuItems ProfileMenuItems[]
+  Users            User[]
+  Permissions      Permission[]       @relation("ProfilePermissions")
+
+  @@index([isActive])
+  @@map("profiles")
+}
+
+model Permission {
+  id         Int              @id @default(autoincrement()) @map("id")
+  name       String           @unique @map("name")
+  action     PermissionAction @default(read) @map("action")
+  subject    String           @map("subject")
+  type       PermissionType   @default(can) @map("type")
+  conditions Json?            @map("conditions")
+  Profiles   Profile[]        @relation("ProfilePermissions")
+
+  @@map("permissions")
+}
+
+model ProfileMenuItems {
+  id         Int       @id @default(autoincrement()) @map("id")
+  profileId  Int       @map("profile_id")
+  menuItemId Int       @map("menu_item_id")
+  isActive   Boolean   @default(true) @map("is_active")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  menuItem   MenuItems @relation(fields: [menuItemId], references: [id])
+  Profile    Profile   @relation(fields: [profileId], references: [id])
+
+  @@unique([profileId, menuItemId])
+  @@map("profile_menu_items")
+}
+
+model MenuItems {
+  id               Int                @id @default(autoincrement()) @map("id")
+  title            String             @map("title")
+  order            Int                @map("order_index")
+  caption          String?            @map("caption")
+  link             String?            @map("link")
+  type             MenuTypes          @default(link) @map("type")
+  icon             String?            @map("icon")
+  isActive         Boolean            @default(true) @map("is_active")
+  createdAt        DateTime           @default(now()) @map("created_at")
+  updatedAt        DateTime           @updatedAt @map("updated_at")
+  parentId         Int?               @map("parent_id")
+  Parent           MenuItems?         @relation("MenuHierarchy", fields: [parentId], references: [id])
+  Children         MenuItems[]        @relation("MenuHierarchy")
+  ProfileMenuItems ProfileMenuItems[]
+
+  @@map("menu_items")
+}
+
