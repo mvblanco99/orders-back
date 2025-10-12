@@ -1,1 +1,0 @@
-/usr/lib/postgresql/17/bin/postgres "-c" "max_connections=100" "-c" "shared_buffers=512MB" "-c" "work_mem=64MB" "-c" "maintenance_work_mem=256MB" "-c" "wal_buffers=16MB" "-c" "checkpoint_timeout=15min" "-c" "effective_cache_size=2GB" "-c" "random_page_cost=1.1" "-c" "logging_collector=on" "-c" "log_statement=none" "-c" "log_min_duration_statement=500"
