@@ -7,7 +7,7 @@ export class QueryOrdersDto extends PaginationDto{
     @ApiPropertyOptional({ description: 'Filter by zoneId', example: 1 })
     @IsOptional()
     @IsNumber()
-    zondeId?: number;
+    zoneId?: number;
 
     @ApiPropertyOptional({
     description: 'Filtrar por fecha de inicio (formato YYYY-MM-DD).',

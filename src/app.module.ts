@@ -12,6 +12,8 @@ import { MenuItemsModule } from './modules/menu-items/menu-items.module';
 import { DropDownsModule } from './modules/drop-downs/drop-downs.module';
 import { ProfilesModule } from './modules/profiles/profiles.module';
 import { FilesModule } from './modules/files/files.module';
+import { OrdersModule } from './modules/orders/orders.module';
+import { ZonesModule } from './modules/zones/zones.module';
 
 @Module({
   imports: [
@@ -25,6 +27,8 @@ import { FilesModule } from './modules/files/files.module';
     DropDownsModule,
     ProfilesModule,
     FilesModule,
+    OrdersModule,
+    ZonesModule,
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '../../', 'public'),
     }),

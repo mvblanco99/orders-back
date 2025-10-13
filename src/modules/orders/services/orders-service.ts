@@ -1,6 +1,7 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import { Prisma } from "@prisma/client";
 import { PrismaService } from "src/modules/prisma/prisma.service";
-import { QueryOrdersDto } from "../dtos";
+import { CreateOrderDto, QueryOrdersDto } from "../dtos";
 
 @Injectable()
 export class OrdersService {
@@ -8,21 +9,21 @@ export class OrdersService {
         private readonly prisma:PrismaService
     ) {}
 
-    async findAll(filters:QueryOrdersDto) {
+    async findAll(filters:QueryOrdersDto, ) {
         const { limit = 10, offset = 0, } = filters;
 
         const where:any = {}
         
-        if(filters.zondeId){
-            where.zoneId = filters.zondeId
+        if(filters.zoneId){
+            where.zoneId = filters.zoneId
         }
 
+      
         if (filters.startDate) {
-            where.orderDate = { lte: new Date(filters.startDate) } ;
+            where.orderDate = { ...where.orderDate, gte: new Date(filters.startDate) };
         }
-
         if (filters.endDate) {
-           where.orderDate = { gte: new Date(filters.endDate) } ;
+            where.orderDate = { ...where.orderDate, lte: new Date(filters.endDate) };
         }
 
         if(filters.isActive){
@@ -34,15 +35,15 @@ export class OrdersService {
         }
 
         if(filters.pickerId){
-            where.pickerId = filters.pickerId
+            where.OrderDetails = { some: { Parts: { some: { pickerId: filters.pickerId } } } }
         }
 
         if(filters.packerId){
-            where.packerId = filters.packerId
+            where.OrderDetails = { some: { Parts: { some: { packerId: filters.packerId } } } }
         }
 
         if(filters.recheckerId){
-            where.recheckerId = filters.recheckerId
+            where.OrderDetails = { some: { Parts: { some: { recheckerId: filters.recheckerId } } } }
         }
 
         if(filters.orderNumber){
@@ -90,5 +91,70 @@ export class OrdersService {
         return order
     }
 
-    async createOrder(){}
+    async createOrder(createOrderDto: CreateOrderDto, createdById: number) {
+        const { zoneId, orderNumber, totalParts,totalUnits,details } = createOrderDto;
+
+        // Validar que el orderNumber no exista
+        const existingOrder = await this.prisma.orders.findUnique({
+            where: { orderNumber },
+        });
+
+        if (existingOrder) {
+            throw new BadRequestException(`La orden con el número ${orderNumber} ya existe.`);
+        }
+
+        return this.prisma.$transaction(async (tx) => {
+            // 1. Crear la cabecera de la Orden (Orders)
+            const order = await tx.orders.create({
+                data: {
+                    orderNumber,
+                    zoneId,
+                    createdBy: createdById,
+                    totalUnits,
+                    totalParts,
+                    orderDate:new Date(),
+                    status: 'pending', 
+                },
+            });
+
+            // 2. Crear los detalles de la orden (OrdersDetails) y las partes (Parts)
+            for (const detail of details) {
+                const { partId, quantity, pickerId } = detail;
+
+                const orderDetail = await tx.ordersDetails.create({
+                    data: {
+                        orderId: order.id,
+                        partId, // Este ID debe corresponder a una entidad "Producto" o "Parte"
+                        quantity,
+                    },
+                });
+
+                // 3. Crear un registro en `Parts` por cada unidad en `quantity`
+                const partsToCreate: Prisma.PartsCreateManyInput[] = [];
+                for (let i = 0; i < quantity; i++) {
+                    partsToCreate.push({
+                        orderDetailId: orderDetail.id,
+                        pickerId,
+                        // packerId y recheckerId se asignarán en etapas posteriores
+                    });
+                }
+                
+                await tx.parts.createMany({
+                    data: partsToCreate,
+                });
+            }
+
+            // Devolver la orden completa con sus detalles
+            return tx.orders.findUnique({
+                where: { id: order.id },
+                include: {
+                    OrderDetails: {
+                        include: {
+                            Parts: true,
+                        },
+                    },
+                },
+            });
+        });
+    }
 }
