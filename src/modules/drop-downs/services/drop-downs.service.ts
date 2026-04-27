@@ -16,6 +16,9 @@ export class DropDownsService {
     tags: () => this.getTags(),
     authors: () => this.getAuthors(),
     'post-status': () => this.getPostStatus(),
+    profiles: () => this.getProfiles(),
+    zones: () => this.getZones(),
+    users: () => this.getUsers(),
   };
 
   constructor(private readonly prismaService: PrismaService) {}
@@ -61,6 +64,28 @@ export class DropDownsService {
   private async getPostStatus(): Promise<DropDown> {
     return await this.prismaService.$queryRaw`
       SELECT e as "value", e as "label" FROM unnest(enum_range(NULL::"PostStatus")) e;
+    `;
+  }
+
+  private async getProfiles(): Promise<DropDown> {
+    return await this.prismaService.$queryRaw`
+      SELECT id as "value", name as "label" FROM profiles WHERE is_active = true AND is_deleted = false ORDER BY name ASC;
+    `;
+  }
+
+   private async getZones(): Promise<DropDown> {
+    return await this.prismaService.$queryRaw`
+      SELECT id as "value", name as "label" FROM zones WHERE is_active = true AND is_deleted = false ORDER BY name ASC;
+    `;
+  }
+
+  private async getUsers(): Promise<DropDown> {
+    return await this.prismaService.$queryRaw`
+      SELECT id as "value",
+             TRIM(CONCAT(name, ' ', COALESCE(last_name, ''))) as "label"
+      FROM users
+      WHERE is_deleted = false AND is_active = true
+      ORDER BY name ASC;
     `;
   }
 }

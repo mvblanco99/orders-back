@@ -34,8 +34,34 @@ services:
           memory: 2G
           cpus: '2.0'
     healthcheck:
-      test:
-        ['CMD-SHELL', 'pg_isready -U ${DB_PS_USERNAME} -d ${DB_PS_DATABASE}']
-      interval: 1m30s
-      timeout: 10s
-      retries: 1
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_PS_USERNAME} -d ${DB_PS_DATABASE}']
+      interval: 10s       # Chequea cada 10 segundos
+      timeout: 5s         # Si no responde en 5 seg, cuenta como fallo
+      retries: 3          # Si falla 3 veces seguidas, es Unhealthy
+      start_period: 30s   # Tiempo de gracia para asignar la memoria (shared_buffers, etc.)
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: orders_backend_api
+    restart: unless-stopped
+    depends_on:
+      orders_back_db:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://${DB_PS_USERNAME}:${DB_PS_PASSWORD}@orders_back_db:5432/${DB_PS_DATABASE}?schema=public
+    ports:
+      - "3000:3000"
+    volumes:
+      # Volumen anónimo para proteger los node_modules del contenedor
+      # y evitar que se sobreescriban si montas carpetas locales en el futuro
+      - /app/node_modules
+
+# Si tu variable ${DB_PS_DOCKER_VOLUME} hace referencia a un volumen nombrado de Docker 
+# (y no a una ruta local como ./data), asegúrate de declararlo aquí abajo.
+# Si es una ruta local, puedes borrar este bloque 'volumes:'.
+volumes:
+  pg_data: # Sustituye 'pg_data' por el valor real de ${DB_PS_DOCKER_VOLUME} si aplica.

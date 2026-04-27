@@ -1,5 +1,4 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
-import { Prisma } from "@prisma/client";
 import { PrismaService } from "src/modules/prisma/prisma.service";
 import { CreateOrderDto, QueryOrdersDto } from "../dtos";
 
@@ -58,6 +57,11 @@ export class OrdersService {
                 where,
                 take: limit,
                 skip: offset,
+                include: {
+                    Zone: {
+                        select: { name: true },
+                    },
+                },
             }),
             this.prisma.orders.count({ where })
         ])
@@ -75,20 +79,32 @@ export class OrdersService {
     }
 
     async findOne(id: number) {
-        const order = this.prisma.orders.findFirst({
+        const order = await this.prisma.orders.findFirst({
             where: { id },
-            include:{
-                OrderDetails:{
-                    include:{
-                        Parts:true
-                    }
-                }
-            }
-        })
+            include: {
+                Zone: {
+                    select: { id: true, name: true },
+                },
+                User: {
+                    select: { id: true, name: true, lastName: true },
+                },
+                OrderDetails: {
+                    include: {
+                        Parts: {
+                            include: {
+                                Picker: { select: { id: true, name: true, lastName: true } },
+                                Packer: { select: { id: true, name: true, lastName: true } },
+                                Rechecker: { select: { id: true, name: true, lastName: true } },
+                            },
+                        },
+                    },
+                },
+            },
+        });
 
-        if(!order) throw new NotFoundException('Order not found') 
+        if (!order) throw new NotFoundException('Order not found');
 
-        return order
+        return order;
     }
 
     async createOrder(createOrderDto: CreateOrderDto, createdById: number) {
@@ -124,23 +140,18 @@ export class OrdersService {
                 const orderDetail = await tx.ordersDetails.create({
                     data: {
                         orderId: order.id,
-                        partId, // Este ID debe corresponder a una entidad "Producto" o "Parte"
+                        partId,
                         quantity,
                     },
                 });
 
-                // 3. Crear un registro en `Parts` por cada unidad en `quantity`
-                const partsToCreate: Prisma.PartsCreateManyInput[] = [];
-                for (let i = 0; i < quantity; i++) {
-                    partsToCreate.push({
+                // 3. Crear UN único registro en `Parts` por cada detalle de la orden
+                await tx.parts.create({
+                    data: {
                         orderDetailId: orderDetail.id,
                         pickerId,
                         // packerId y recheckerId se asignarán en etapas posteriores
-                    });
-                }
-                
-                await tx.parts.createMany({
-                    data: partsToCreate,
+                    },
                 });
             }
 

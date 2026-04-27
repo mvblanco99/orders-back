@@ -49,6 +49,7 @@ model User {
   email           String            @unique @map("email")
   password        String?           @map("password")
   name            String            @map("name")
+  lastName        String?           @map("last_name")
   isActive        Boolean           @default(true) @map("is_active")
   isDeleted       Boolean           @default(false) @map("is_deleted")
   createdAt       DateTime          @default(now()) @map("created_at")

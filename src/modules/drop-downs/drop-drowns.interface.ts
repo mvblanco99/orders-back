@@ -10,6 +10,9 @@ export enum DropDownsParam {
   'tags' = 'tags',
   'authors' = 'authors',
   'post-status' = 'post-status',
+  'profiles' = 'profiles',
+  'zones' = 'zones',
+  'users' = 'users',
 }
 
 export type DropDownsExecute = Record<DropDownsParam, () => Promise<DropDown>>;

@@ -47,6 +47,7 @@ async function main() {
         process.env.LOGIN_PASSWORD || 'defaultPassword1!',
       ),
       name: 'SysAdmin',
+      lastName: 'Admin',
       slug:'gerente',
       profileId: 1
     },

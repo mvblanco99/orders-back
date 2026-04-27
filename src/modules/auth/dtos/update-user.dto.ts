@@ -11,14 +11,16 @@ import {
 import { ApiProperty } from '@nestjs/swagger';
 
 export class UpdateUserDto {
-  @ApiProperty({ description: 'Correo electrónico del usuario' })
+  @ApiProperty({ description: 'Correo electrónico del usuario', required: false })
+  @IsOptional()
   @IsEmail()
-  email: string;
+  email?: string;
 
   @ApiProperty({
     description: 'Contraseña del usuario',
     minLength: 6,
     maxLength: 50,
+    required: false,
   })
   @IsOptional()
   @IsString()
@@ -33,7 +35,12 @@ export class UpdateUserDto {
   @ApiProperty({ description: 'Nombre del usuario', required: false })
   @IsOptional()
   @IsString()
-  name: string;
+  name?: string;
+
+  @ApiProperty({ description: 'Apellido del usuario', required: false })
+  @IsOptional()
+  @IsString()
+  lastName?: string;
 
   @ApiProperty({
     description: 'ID del perfil del usuario',
@@ -41,5 +48,5 @@ export class UpdateUserDto {
   })
   @IsInt()
   @IsOptional()
-  profileId: number;
+  profileId?: number;
 }

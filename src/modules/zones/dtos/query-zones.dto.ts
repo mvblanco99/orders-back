@@ -8,7 +8,7 @@ export class QueryZonesDto extends PaginationDto {
   @ApiPropertyOptional({ description: 'Filtrar por nombre de zona' })
   @IsString()
   @IsOptional()
-  name?: string;
+  inputSearch?: string;
 
   @ApiPropertyOptional({ description: 'Filtrar por estado activo' })
   @IsBoolean()

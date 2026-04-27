@@ -7,6 +7,8 @@ import {
   ParseIntPipe,
   Delete,
   UseGuards,
+  Post,
+  Query,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth } from '@nestjs/swagger';
@@ -17,7 +19,7 @@ import {
   CheckPolicies,
 } from '../../casl/decorators/check-policies.decorator';
 import { UsersService } from '../services/users.service';
-import { UpdateUserDto } from '../dtos';
+import { QueryUsersDto, RegisterUserDto, UpdateUserDto } from '../dtos';
 
 import { GetUser } from '../decorators';
 import type { ModelUser } from '../interfaces/model-auth.interface';
@@ -30,8 +32,8 @@ export class UsersController {
 
   @Get()
   @CheckPolicies((ability) => ability.can(Action.Read, 'User'))
-  findAll() {
-    return this.usersService.findAll();
+  findAll(@Query() filters: QueryUsersDto) {
+    return this.usersService.findAll(filters);
   }
 
   @Get('profile')
@@ -43,6 +45,14 @@ export class UsersController {
   @CheckPolicies((ability) => ability.can(Action.Read, 'User'))
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.usersService.findOne(id);
+  }
+
+  @Post()
+  @CheckPolicies((ability) => ability.can(Action.Create, 'User'))
+  create(
+    @Body() registerUserDto: RegisterUserDto,
+  ) {
+    return this.usersService.create(registerUserDto);
   }
 
   @Patch(':id')

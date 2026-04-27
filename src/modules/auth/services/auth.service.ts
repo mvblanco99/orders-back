@@ -51,7 +51,7 @@ export class AuthService {
 
   async create(createUserDto: RegisterUserDto, userId:number) {
     try {
-      const { email, password, name } = createUserDto;
+      const { email, password, name, lastName } = createUserDto;
 
       const existingUser = await this.prismaService.user.findFirst({
         where: { email: email.toLowerCase() },
@@ -73,11 +73,14 @@ export class AuthService {
             email: createUserDto.email.toLowerCase(),
             password: await encryptData(password),
             name,
+            lastName: lastName ?? null,
             profileId: DEFAULT_USER_PROFILE_ID,
           },
           select: {
             id: true,
             email: true,
+            name: true,
+            lastName: true,
             isActive: true,
           },
         });
@@ -114,6 +117,8 @@ export class AuthService {
       select: {
         id: true,
         email: true,
+        name: true,
+        lastName: true,
         isActive: true,
         password: true,
       },

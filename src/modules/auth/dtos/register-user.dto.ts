@@ -33,6 +33,11 @@ export class RegisterUserDto {
   @IsOptional()
   name: string;
 
+   @ApiProperty({ description: 'Apellido del usuario', required: false })
+  @IsString()
+  @IsOptional()
+  lastName: string;
+
   @ApiProperty({
     description: 'ID del perfil del usuario',
     required: false,

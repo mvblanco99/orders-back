@@ -27,14 +27,14 @@ export class ZonesService {
   }
 
   async findAll(filters: QueryZonesDto) {
-    const { limit = 10, offset = 0, name, isActive } = filters;
+    const { limit = 10, offset = 0, inputSearch, isActive } = filters;
 
     const where: any = {
       isDeleted: false, // Siempre excluimos las eliminadas
     };
 
-    if (name) {
-      where.name = { contains: name, mode: 'insensitive' };
+    if (inputSearch) {
+      where.name = { contains: inputSearch, mode: 'insensitive' };
     }
 
     if (isActive !== undefined) {
