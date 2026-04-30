@@ -62,6 +62,7 @@ model User {
   Picker          Parts[]           @relation("PartsPicker")
   Packer          Parts[]           @relation("PartsPacker")
   Rechecker       Parts[]           @relation("PartsRechecker")
+  FailuresCreated Failure[]         @relation("FailureCreator")
   UserLogger      UserLogger[]
 
   @@index([isDeleted])
@@ -138,9 +139,27 @@ model Parts{
   Picker      User?   @relation("PartsPicker", fields: [pickerId], references: [id])
   Packer      User?   @relation("PartsPacker", fields: [packerId], references: [id])
   Rechecker   User?   @relation("PartsRechecker", fields: [recheckerId], references: [id])
-  
+  Failures    Failure[]
+
   @@index([isActive])
   @@map("parts")
+}
+
+model Failure {
+  id          Int      @id @default(autoincrement()) @map("id")
+  partId      Int      @map("part_id")
+  observation String   @map("observation")
+  createdBy   Int      @map("created_by")
+  isActive    Boolean  @default(true) @map("is_active")
+  isDeleted   Boolean  @default(false) @map("is_deleted")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  Part        Parts    @relation(fields: [partId], references: [id])
+  Creator     User     @relation("FailureCreator", fields: [createdBy], references: [id])
+
+  @@index([partId])
+  @@map("failures")
 }
 
 model Profile {

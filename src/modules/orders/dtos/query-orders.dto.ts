@@ -1,7 +1,14 @@
 import { ApiPropertyOptional } from "@nestjs/swagger";
 import { Transform } from "class-transformer";
-import { IsBoolean, IsDateString, IsNumber, IsOptional, IsString } from "class-validator";
+import { IsDateString, IsEnum, IsNumber, IsOptional, IsString } from "class-validator";
 import { PaginationDto } from "src/modules/common/dtos/pagination.dto";
+
+enum OrderStatus {
+    pending = 'pending',
+    processing = 'processing',
+    completed = 'completed',
+    cancelled = 'cancelled',
+}
 
 export class QueryOrdersDto extends PaginationDto{
     @ApiPropertyOptional({ description: 'Filter by zoneId', example: 1 })
@@ -24,19 +31,6 @@ export class QueryOrdersDto extends PaginationDto{
     @IsOptional()
     @IsDateString()
     endDate?: string
-    
-    @ApiPropertyOptional({
-    description: 'Indica si la oferta está activo',
-    required: false,
-  })
-  @IsOptional()
-  @IsBoolean()
-  @Transform(({ value }) => {
-    if (value === 'true') return true;
-    if (value === 'false') return false;
-    return undefined; // Si no se envía, se considera como no filtrado
-  })
-  isActive?: boolean;
 
     @ApiPropertyOptional({ description: 'Filter by creatorId order', example: 1 })
     @IsOptional()
@@ -62,5 +56,14 @@ export class QueryOrdersDto extends PaginationDto{
     @IsOptional()
     @IsString()
     orderNumber?:string
+
+    @ApiPropertyOptional({
+        description: 'Filtrar por estado del pedido',
+        enum: OrderStatus,
+        example: 'pending',
+    })
+    @IsOptional()
+    @IsEnum(OrderStatus)
+    status?: OrderStatus
 
 }

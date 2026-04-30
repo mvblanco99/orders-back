@@ -40,6 +40,20 @@ services:
       retries: 3          # Si falla 3 veces seguidas, es Unhealthy
       start_period: 30s   # Tiempo de gracia para asignar la memoria (shared_buffers, etc.)
 
+  # --- NUEVO SERVICIO ADMINER ---
+  adminer:
+    image: adminer
+    container_name: orders_adminer # Un nombre descriptivo para este proyecto
+    restart: always
+    ports:
+      - 8082:8080
+    depends_on:
+      orders_back_db:
+        condition: service_healthy
+    environment:
+      # Esto pre-selecciona "PostgreSQL" en el panel de login
+      ADMINER_DEFAULT_SERVER: orders_back_db
+
   backend:
     build:
       context: .
